@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paleblood Vigil — Algorithmic Art</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Crimson Text', serif;
+  background: #0a0005;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #c9a0a0;
+}
+
+header {
+  background: rgba(10,0,8,0.95);
+  border-bottom: 1px solid #3a0018;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 10;
+}
+.logo {
+  width: 30px; height: 30px;
+  background: radial-gradient(circle at 35% 35%, #8b0000, #3d0010);
+  border-radius: 50%;
+  box-shadow: 0 0 12px #8b000066;
+}
+header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 15px; font-weight: 600;
+  color: #d4a0a0; letter-spacing: 0.1em;
+}
+header span { font-size: 12px; color: #5a3040; font-style: italic; }
+
+.workspace { display: flex; flex: 1; overflow: hidden; }
+
+.sidebar {
+  width: 230px; min-width: 230px;
+  background: rgba(10,0,8,0.98);
+  border-right: 1px solid #2a0012;
+  padding: 18px 14px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+.section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: #6b2030; margin-bottom: 10px;
+}
+
+.seed-display {
+  background: #0d0008;
+  border: 1px solid #3a0018;
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 13px; color: #c9808080;
+  text-align: center; margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Cinzel', serif;
+}
+
+.btn-row { display: flex; gap: 5px; }
+.btn {
+  flex: 1; padding: 6px 4px;
+  border: 1px solid #3a0018;
+  border-radius: 3px;
+  background: #0d0008;
+  font-size: 11px; font-family: 'Crimson Text', serif;
+  cursor: pointer; color: #a06060;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover { background: #1a0010; border-color: #7a0030; color: #e08080; }
+.btn:active { transform: scale(0.97); }
+.btn.primary {
+  background: linear-gradient(135deg, #5a0018, #3d000f);
+  color: #e0a0a0; border-color: #7a0030;
+}
+.btn.primary:hover { background: linear-gradient(135deg, #7a0020, #5a0015); }
+
+.jump-row { display: flex; gap: 5px; margin-top: 5px; }
+.jump-row input {
+  flex: 1; border: 1px solid #3a0018; border-radius: 3px;
+  padding: 5px 7px; font-size: 11px;
+  font-family: 'Crimson Text', serif;
+  background: #0d0008; color: #c08080; outline: none;
+}
+.jump-row input:focus { border-color: #7a0030; }
+
+.control-group { margin-bottom: 11px; }
+.control-group label {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: #7a5050; margin-bottom: 4px;
+}
+.control-group label .val { color: #c09090; font-family: 'Cinzel', serif; font-size: 10px; }
+.control-group input[type=range] {
+  width: 100%; -webkit-appearance: none;
+  height: 2px; border-radius: 1px;
+  background: linear-gradient(to right, #8b0000 var(--pct,50%), #2a0012 var(--pct,50%));
+  outline: none; cursor: pointer;
+}
+.control-group input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px;
+  border-radius: 50%; background: #8b0000;
+  box-shadow: 0 0 6px #8b000088;
+}
+.control-group input[type=color] {
+  width: 100%; height: 28px;
+  border: 1px solid #3a0018; border-radius: 3px;
+  cursor: pointer; background: none;
+}
+.divider { height: 1px; background: #1a0010; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"></div>
+  <h1>Paleblood Vigil</h1>
+  <span>the hunt · eldritch convergence · cosmic horror</span>
+</header>
+
+<div class="workspace">
+<aside class="sidebar">
+
+  <div>
+    <div class="section-title">Seed</div>
+    <div class="seed-display" id="seed-display">6660</div>
+    <div class="btn-row">
+      <button class="btn" onclick="changeSeed(-1)">◀</button>
+      <button class="btn" onclick="changeSeed(1)">▶</button>
+    </div>
+    <div class="btn-row" style="margin-top:5px">
+      <button class="btn primary" onclick="rndSeed()">⟳ Random Nightmare</button>
+    </div>
+    <div class="jump-row">
+      <input type="number" id="seed-input" placeholder="Jump to seed…">
+      <button class="btn" onclick="jumpSeed()">Go</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div>
+    <div class="section-title">Parameters</div>
+    <div class="control-group">
+      <label>Blood Count <span class="val" id="v-blood">2000</span></label>
+      <input type="range" id="s-blood" min="500" max="4000" step="100" value="2000" oninput="up('blood',this)">
+    </div>
+    <div class="control-group">
+      <label>Gravity Pull <span class="val" id="v-pull">1.2</span></label>
+      <input type="range" id="s-pull" min="0.2" max="3.0" step="0.1" value="1.2" oninput="up('pull',this)">
+    </div>
+    <div class="control-group">
+      <label>Turbulence <span class="val" id="v-turb">3</span></label>
+      <input type="range" id="s-turb" min="0.5" max="8" step="0.5" value="3" oninput="up('turb',this)">
+    </div>
+    <div class="control-group">
+      <label>Tentacles <span class="val" id="v-tent">8</span></label>
+      <input type="range" id="s-tent" min="2" max="20" step="1" value="8" oninput="up('tent',this)">
+    </div>
+    <div class="control-group">
+      <label>Eye Frequency <span class="val" id="v-eye">0.4</span></label>
+      <input type="range" id="s-eye" min="0.05" max="1.0" step="0.05" value="0.4" oninput="up('eye',this)">
+    </div>
+    <div class="control-group">
+      <label>Viscosity <span class="val" id="v-visc">2.5</span></label>
+      <input type="range" id="s-visc" min="0.5" max="6" step="0.25" value="2.5" oninput="up('visc',this)">
+    </div>
+    <div class="control-group">
+      <label>Trail Fade <span class="val" id="v-fade">8</span></label>
+      <input type="range" id="s-fade" min="2" max="30" step="1" value="8" oninput="up('fade',this)">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div>
+    <div class="section-title">Actions</div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="doReinit()">↺ Begin the Hunt</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button class="btn" onclick="doReset()">Reset</button>
+      <button class="btn" onclick="doPNG()">↓ PNG</button>
+    </div>
+  </div>
+
+</aside>
+
+<main style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#04000a;">
+  <div id="cc"></div>
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  PALEBLOOD VIGIL
+//  Philosophy: "Vileblood Hymn" — the Great Ones
+//  as gravitational nightmares. Blood as substrate
+//  of cosmic computation. Every particle a prayer
+//  drawn into the abyss. Tentacles as the fingers
+//  of something vast. Eyes that were always watching.
+// ═══════════════════════════════════════════════
+
+const P = {
+  seed:  6660,
+  blood: 2000,
+  pull:  1.2,
+  turb:  3,
+  tent:  8,
+  eye:   0.4,
+  visc:  2.5,
+  fade:  8,
+};
+
+let _needReinit = false;
+document.addEventListener('reinit', () => { _needReinit = true; });
+
+new p5(p => {
+
+  // ── Rendering layers ─────────────────────────
+  let trailPg; // persistent blood trail accumulation
+  let sz;
+
+  // ── State ────────────────────────────────────
+  let particles = [];
+  let attractors = [];
+  let tentacles  = [];
+  let eyes       = [];
+  let fc = 0;
+
+  // ── Classes ──────────────────────────────────
+
+  class Attractor {
+    constructor(bx, by, str) {
+      this.bx = bx; this.by = by; this.str = str;
+      this.orbitR = p.random(30, sz * 0.18);
+      this.orbitAngle = p.random(p.TWO_PI);
+      this.orbitSpeed = p.random(0.004, 0.009) * (p.random() < 0.5 ? 1 : -1);
+      this.pulseOff = p.random(p.TWO_PI);
+      this.x = bx; this.y = by;
+    }
+    update() {
+      this.orbitAngle += this.orbitSpeed;
+      this.x = this.bx + Math.cos(this.orbitAngle) * this.orbitR;
+      this.y = this.by + Math.sin(this.orbitAngle) * this.orbitR;
+    }
+    pulse() { return 0.75 + 0.25 * Math.sin(fc * 0.04 + this.pulseOff); }
+  }
+
+  class Particle {
+    constructor() { this.reset(true); }
+    reset(anywhere) {
+      if (anywhere) {
+        this.x = p.random(sz); this.y = p.random(sz);
+      } else {
+        // Respawn near a random attractor
+        let a = attractors[Math.floor(p.random(attractors.length))];
+        this.x = a.x + p.randomGaussian(0, sz * 0.15);
+        this.y = a.y + p.randomGaussian(0, sz * 0.15);
+      }
+      this.vx = p.randomGaussian(0, 0.4);
+      this.vy = p.randomGaussian(0, 0.4);
+      this.life = p.random(0.4, 1.0);
+      this.maxLife = this.life;
+      this.sz = p.random(0.6, 2.2);
+    }
+    update() {
+      // Attractor pull
+      for (let a of attractors) {
+        let dx = a.x - this.x, dy = a.y - this.y;
+        let d2 = dx*dx + dy*dy;
+        let d  = Math.sqrt(d2);
+        if (d < 4) { this.reset(false); return; }
+        let f = Math.min((P.pull * a.str * a.pulse()) / d2, 1.2);
+        this.vx += (dx / d) * f;
+        this.vy += (dy / d) * f;
+      }
+      // Noise perturbation (Perlin flow)
+      let nx = this.x * 0.0018 * P.turb;
+      let ny = this.y * 0.0018 * P.turb;
+      let nv = p.noise(nx + P.seed * 0.01, ny + P.seed * 0.01, fc * 0.00035);
+      let na = nv * p.TWO_PI * 2.3;
+      this.vx += Math.cos(na) * 0.12;
+      this.vy += Math.sin(na) * 0.12;
+      // Damping
+      let damp = 1 - P.visc * 0.008;
+      this.vx *= damp; this.vy *= damp;
+      // Speed cap
+      let spd = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+      let cap = 4 + P.pull;
+      if (spd > cap) { this.vx = this.vx/spd*cap; this.vy = this.vy/spd*cap; }
+      this.x += this.vx; this.y += this.vy;
+      this.life -= 0.0025;
+      if (this.life <= 0 || this.x < -2 || this.x > sz+2 || this.y < -2 || this.y > sz+2) {
+        this.reset(false);
+      }
+    }
+    draw() {
+      let spd = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+      let alpha = (this.life / this.maxLife) * 85;
+      // Hue: resting crimson → hot blood-orange at speed
+      let hue = p.map(spd, 0, 5, 0, 18);
+      let sat = p.map(spd, 0, 4, 75, 95);
+      let bri = p.map(spd, 0, 5, 35, 80);
+      trailPg.stroke(hue, sat, bri, alpha);
+      let sw = this.sz * (0.5 + spd * 0.18);
+      trailPg.strokeWeight(sw);
+      if (spd > 0.6) {
+        let len = Math.min(spd * 2.5, 12);
+        let nx = this.vx/spd, ny = this.vy/spd;
+        trailPg.line(this.x - nx*len, this.y - ny*len, this.x, this.y);
+      } else {
+        trailPg.point(this.x, this.y);
+      }
+    }
+  }
+
+  class Tentacle {
+    constructor(ox, oy) {
+      this.numSeg = Math.floor(p.random(14, 26));
+      this.segLen = p.random(10, 20);
+      this.thick  = p.random(2, 5);
+      this.noiseOff = p.random(2000);
+      this.phase  = p.random(p.TWO_PI);
+      this.age    = 0;
+      this.maxAge = p.random(400, 900);
+      this.segs = [];
+      for (let i = 0; i < this.numSeg; i++) this.segs.push({x: ox, y: oy, a: p.random(p.TWO_PI)});
+    }
+    get alive() { return this.age < this.maxAge; }
+    update() {
+      this.age++;
+      // Head steered by noise + slight attractor influence
+      let h = this.segs[0];
+      let nv = p.noise(h.x*0.003 + this.noiseOff, h.y*0.003 + this.noiseOff, fc*0.0005);
+      let target = nv * p.TWO_PI * 2;
+      h.a = h.a + 0.07 * (((target - h.a + Math.PI * 3) % (Math.PI*2)) - Math.PI);
+      h.x += Math.cos(h.a) * 1.6;
+      h.y += Math.sin(h.a) * 1.6;
+      // Chain IK
+      for (let i = 1; i < this.segs.length; i++) {
+        let s = this.segs[i], prev = this.segs[i-1];
+        let dx = prev.x - s.x, dy = prev.y - s.y;
+        let d  = Math.sqrt(dx*dx + dy*dy);
+        if (d > this.segLen) {
+          let r = (d - this.segLen) / d * 0.5;
+          s.x += dx * r; s.y += dy * r;
+        }
+      }
+    }
+    draw() {
+      let fadeIn  = Math.min(this.age / 50, 1);
+      let fadeOut = this.age > this.maxAge - 70 ? (this.maxAge - this.age) / 70 : 1;
+      let alpha   = fadeIn * fadeOut;
+      for (let i = 0; i < this.segs.length - 1; i++) {
+        let s = this.segs[i], sn = this.segs[i+1];
+        let t   = i / this.segs.length;
+        let sw  = this.thick * (1 - t * 0.75);
+        let pulse = 0.7 + 0.3 * Math.sin(fc * 0.04 + i * 0.25 + this.phase);
+        let bri = 10 + t * 8 + pulse * 6;
+        // Deep purple-black tentacle flesh
+        p.stroke(280 + t * 30, 55, bri, alpha * 70);
+        p.strokeWeight(sw);
+        p.line(s.x, s.y, sn.x, sn.y);
+        // Highlights on thick segments
+        if (sw > 1.5) {
+          p.stroke(300, 40, bri + 12, alpha * 25);
+          p.strokeWeight(sw * 0.3);
+          p.line(s.x - Math.sin(s.a||0)*sw*0.3, s.y + Math.cos(s.a||0)*sw*0.3,
+                 sn.x- Math.sin(s.a||0)*sw*0.3, sn.y+ Math.cos(s.a||0)*sw*0.3);
+        }
+        // Sucker nodes
+        if (i % 5 === 0 && sw > 1) {
+          p.noStroke();
+          p.fill(320, 50, 20, alpha * 50);
+          p.circle(s.x, s.y, sw * 2.2);
+          p.fill(320, 30, 35, alpha * 20);
+          p.circle(s.x, s.y, sw * 1.0);
+        }
+      }
+    }
+  }
+
+  class Eye {
+    constructor(x, y) {
+      this.x = x; this.y = y;
+      this.w  = p.random(28, 64);
+      this.openness = 0;
+      this.state = 'opening';
+      this.timer = 0;
+      this.openFor = p.random(90, 280);
+      this.phase = p.random(p.TWO_PI);
+      this.irisAngle = 0;
+      this.irisSpeed = p.random(-0.015, 0.015);
+      this.bloodVeins = [];
+      for (let i = 0; i < 6; i++) {
+        this.bloodVeins.push({
+          a:  p.random(p.TWO_PI),
+          len: p.random(0.2, 0.45),
+          w:  p.random(0.3, 0.7),
+        });
+      }
+    }
+    get dead() { return this.state === 'dead'; }
+    update() {
+      this.irisAngle += this.irisSpeed;
+      switch(this.state) {
+        case 'opening':
+          this.openness += 0.03;
+          if (this.openness >= 1) { this.openness = 1; this.state = 'open'; this.timer = 0; }
+          break;
+        case 'open':
+          this.timer++;
+          // Occasional blink
+          if (this.timer > this.openFor) this.state = 'closing';
+          break;
+        case 'closing':
+          this.openness -= 0.025;
+          if (this.openness <= 0) { this.openness = 0; this.state = 'dead'; }
+          break;
+      }
+    }
+    draw() {
+      let h = (this.w * 0.38) * this.openness;
+      if (h < 0.5) return;
+      let w = this.w;
+
+      p.push();
+      p.translate(this.x, this.y);
+      p.noStroke();
+
+      // Outer glow
+      let glowR = w * 0.7;
+      for (let r = glowR; r > 0; r -= glowR * 0.12) {
+        let a = p.map(r, 0, glowR, 22, 0);
+        p.fill(0, 80, 35, a * this.openness);
+        p.ellipse(0, 0, r * 2, r * 0.7 * this.openness);
+      }
+
+      // Sclera — bloodshot ivory
+      p.fill(15, 22, 84, 92 * this.openness);
+      p.ellipse(0, 0, w, h * 2);
+
+      // Blood veins
+      p.noFill();
+      for (let v of this.bloodVeins) {
+        let vlen = w * v.len;
+        let va = v.a;
+        p.stroke(0, 88, 55, 40 * this.openness);
+        p.strokeWeight(v.w);
+        p.beginShape();
+        for (let t = 0; t <= 1; t += 0.2) {
+          let cx = Math.cos(va) * vlen * t;
+          let cy = Math.sin(va) * Math.min(vlen * 0.25, h * 0.8) * t;
+          // Clamp y within sclera
+          let maxY = h * Math.sqrt(Math.max(0, 1 - (cx/(w*0.5))*(cx/(w*0.5))));
+          p.curveVertex(cx, Math.max(-maxY, Math.min(maxY, cy)));
+        }
+        p.endShape();
+      }
+
+      // Iris — gold with radial texture
+      let ir = h * 0.88;
+      p.noStroke();
+      p.fill(32, 88, 60, 95 * this.openness);
+      p.circle(0, 0, ir * 2);
+      // Iris depth rings
+      for (let r = ir * 0.9; r > ir * 0.3; r -= ir * 0.15) {
+        p.stroke(28, 70, 40, 30 * this.openness);
+        p.strokeWeight(0.5);
+        p.noFill();
+        p.circle(0, 0, r * 2);
+      }
+      // Radial iris lines
+      p.stroke(25, 65, 48, 45 * this.openness);
+      p.strokeWeight(0.5);
+      for (let i = 0; i < 20; i++) {
+        let ia = this.irisAngle + i * p.TWO_PI / 20;
+        p.line(Math.cos(ia)*ir*0.28, Math.sin(ia)*ir*0.28,
+               Math.cos(ia)*ir*0.88, Math.sin(ia)*ir*0.88);
+      }
+
+      // Pupil — vertical slit
+      p.noStroke();
+      p.fill(0, 0, 2, 98 * this.openness);
+      p.ellipse(0, 0, ir * 0.28, ir * 0.92);
+      // Pupil glow edge
+      p.stroke(0, 60, 30, 40 * this.openness);
+      p.strokeWeight(0.6);
+      p.noFill();
+      p.ellipse(0, 0, ir * 0.28, ir * 0.92);
+
+      // Catch-light
+      p.noStroke();
+      p.fill(0, 0, 92, 60 * this.openness);
+      p.circle(ir * 0.12, -ir * 0.22, ir * 0.1);
+
+      // Eyelid overlay — top
+      p.fill(0, 0, 3, 98);
+      p.beginShape();
+      p.vertex(-w * 0.6, -h * 1.5);
+      p.vertex( w * 0.6, -h * 1.5);
+      for (let a = 0; a <= p.PI; a += 0.08) {
+        p.vertex(Math.cos(a + p.PI) * w * 0.5, -Math.abs(Math.sin(a)) * h);
+      }
+      p.endShape(p.CLOSE);
+
+      // Eyelid overlay — bottom
+      p.beginShape();
+      p.vertex(-w * 0.6, h * 1.5);
+      p.vertex( w * 0.6, h * 1.5);
+      for (let a = 0; a <= p.PI; a += 0.08) {
+        p.vertex(Math.cos(a) * w * 0.5, Math.abs(Math.sin(a)) * h);
+      }
+      p.endShape(p.CLOSE);
+
+      // Corner tearducts — tiny blood drops
+      p.noStroke();
+      p.fill(0, 85, 50, 55 * this.openness);
+      p.ellipse(-w*0.46, 0, 4, 6);
+      p.ellipse( w*0.46, 0, 4, 6);
+
+      p.pop();
+    }
+  }
+
+  // ── Setup ─────────────────────────────────────
+  p.setup = function() {
+    sz = Math.min(window.innerWidth - 240, window.innerHeight - 64, 860);
+    let cnv = p.createCanvas(sz, sz);
+    cnv.parent('cc');
+    p.colorMode(p.HSB, 360, 100, 100, 100);
+    trailPg = p.createGraphics(sz, sz);
+    trailPg.colorMode(p.HSB, 360, 100, 100, 100);
+    trailPg.noSmooth();
+    init();
+  };
+
+  p.draw = function() {
+    if (_needReinit) { init(); _needReinit = false; }
+
+    // ── Background fade ──────────────────────
+    trailPg.noStroke();
+    trailPg.fill(270, 30, 2, P.fade * 0.35);
+    trailPg.rect(0, 0, sz, sz);
+
+    // ── Attractors update ────────────────────
+    for (let a of attractors) a.update();
+
+    // ── Particles update + draw to trail ─────
+    for (let part of particles) { part.update(); part.draw(); }
+
+    // ── Composite trail layer ────────────────
+    p.background(270, 30, 2);
+    p.image(trailPg, 0, 0);
+
+    // ── Attractor glow ───────────────────────
+    p.noStroke();
+    for (let a of attractors) {
+      let pulse = a.pulse();
+      for (let r = sz * 0.1; r > 0; r -= sz * 0.012) {
+        let alpha = p.map(r, 0, sz * 0.1, 8, 0) * pulse;
+        p.fill(340, 70, 40, alpha);
+        p.circle(a.x, a.y, r * 2);
+      }
+      p.fill(0, 80, 70, 30 * pulse);
+      p.circle(a.x, a.y, 4 * pulse);
+    }
+
+    // ── Tentacles ───────────────────────────
+    p.noFill();
+    for (let i = tentacles.length - 1; i >= 0; i--) {
+      tentacles[i].update();
+      tentacles[i].draw();
+      if (!tentacles[i].alive) tentacles.splice(i, 1);
+    }
+    // Spawn replacement tentacles
+    while (tentacles.length < P.tent) {
+      let edge = Math.floor(p.random(4));
+      let ox = edge === 0 ? p.random(sz) : edge === 1 ? sz : edge === 2 ? p.random(sz) : 0;
+      let oy = edge === 0 ? 0            : edge === 1 ? p.random(sz) : edge === 2 ? sz    : p.random(sz);
+      tentacles.push(new Tentacle(ox, oy));
+    }
+
+    // ── Eyes ────────────────────────────────
+    for (let i = eyes.length - 1; i >= 0; i--) {
+      eyes[i].update();
+      eyes[i].draw();
+      if (eyes[i].dead) eyes.splice(i, 1);
+    }
+    // Spawn new eyes
+    if (p.random() < P.eye * 0.008 && eyes.length < 12) {
+      // Spawn near attractor or random
+      let ax = attractors[Math.floor(p.random(attractors.length))];
+      let ex = ax.x + p.randomGaussian(0, sz * 0.2);
+      let ey = ax.y + p.randomGaussian(0, sz * 0.2);
+      ex = p.constrain(ex, 40, sz - 40);
+      ey = p.constrain(ey, 40, sz - 40);
+      eyes.push(new Eye(ex, ey));
+    }
+
+    // ── Cosmic sigil background (subtle) ─────
+    if (fc % 3 === 0) drawSigil();
+
+    // ── Vignette ────────────────────────────
+    for (let r = sz * 0.9; r > sz * 0.4; r -= sz * 0.06) {
+      let a = p.map(r, sz * 0.4, sz * 0.9, 12, 0);
+      p.noStroke();
+      p.fill(270, 40, 1, a);
+      p.rect(0, 0, sz, sz);
+      let inner = sz * 1.35;
+      p.fill(270, 30, 0, a * 0.7);
+      p.beginShape();
+      p.rect(0, 0, sz, sz);
+      p.endShape();
+    }
+
+    fc++;
+  };
+
+  function drawSigil() {
+    // Slowly rotating eldritch geometry — subtly visible in the background
+    p.push();
+    p.translate(sz * 0.5, sz * 0.5);
+    p.rotate(fc * 0.0003);
+    p.noFill();
+    let rings = 3;
+    for (let ri = 0; ri < rings; ri++) {
+      let r = sz * (0.28 + ri * 0.11);
+      let sides = 6 + ri * 3;
+      let alpha = 3 - ri * 0.8;
+      p.stroke(290 + ri * 20, 40, 40, alpha);
+      p.strokeWeight(0.5);
+      p.beginShape();
+      for (let i = 0; i <= sides; i++) {
+        let a = i / sides * p.TWO_PI + fc * 0.0002 * (ri % 2 === 0 ? 1 : -1);
+        p.vertex(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      p.endShape(p.CLOSE);
+      // Spokes
+      for (let i = 0; i < sides; i++) {
+        let a = i / sides * p.TWO_PI + fc * 0.0002;
+        p.stroke(300, 30, 30, alpha * 0.6);
+        p.line(Math.cos(a)*r*0.1, Math.sin(a)*r*0.1, Math.cos(a)*r, Math.sin(a)*r);
+      }
+    }
+    p.pop();
+  }
+
+  function init() {
+    fc = 0;
+    particles = [];
+    attractors = [];
+    tentacles  = [];
+    eyes       = [];
+
+    p.randomSeed(P.seed);
+    p.noiseSeed(P.seed);
+    trailPg.background(270, 30, 2);
+
+    // Attractors — 4 nightmare entities
+    let cx = sz * 0.5, cy = sz * 0.5;
+    for (let i = 0; i < 4; i++) {
+      let a = i / 4 * p.TWO_PI + p.random(0.4);
+      let r = sz * p.random(0.12, 0.28);
+      attractors.push(new Attractor(cx + Math.cos(a)*r, cy + Math.sin(a)*r, p.random(0.6, 1.4)));
+    }
+
+    // Blood particles
+    for (let i = 0; i < P.blood; i++) particles.push(new Particle());
+
+    // Initial tentacles
+    for (let i = 0; i < P.tent; i++) {
+      let edge = Math.floor(p.random(4));
+      let ox = edge === 0 ? p.random(sz) : edge === 1 ? sz : edge === 2 ? p.random(sz) : 0;
+      let oy = edge === 0 ? 0            : edge === 1 ? p.random(sz) : edge === 2 ? sz    : p.random(sz);
+      tentacles.push(new Tentacle(ox, oy));
+    }
+  }
+
+  p.windowResized = function() {
+    sz = Math.min(window.innerWidth - 240, window.innerHeight - 64, 860);
+    p.resizeCanvas(sz, sz);
+    trailPg.resizeCanvas(sz, sz);
+    _needReinit = true;
+  };
+}, document.getElementById('cc'));
+
+// ── UI ─────────────────────────────────────────
+const DEFAULTS = {...P};
+
+function up(key, el) {
+  let v = parseFloat(el.value);
+  let pct = ((v - +el.min) / (+el.max - +el.min) * 100).toFixed(1);
+  el.style.setProperty('--pct', pct + '%');
+  P[key] = key === 'tent' ? Math.round(v) : v;
+  document.getElementById('v-' + key).textContent = P[key];
+}
+
+function setSeedDisplay() { document.getElementById('seed-display').textContent = P.seed; }
+function changeSeed(d) { P.seed = Math.max(1, P.seed + d); setSeedDisplay(); doReinit(); }
+function rndSeed()     { P.seed = Math.floor(Math.random()*99999)+1; setSeedDisplay(); doReinit(); }
+function jumpSeed()    { let v = +document.getElementById('seed-input').value; if (v > 0) { P.seed = Math.floor(v); setSeedDisplay(); doReinit(); }}
+function doReinit()    { document.dispatchEvent(new CustomEvent('reinit')); }
+
+function doReset() {
+  Object.assign(P, DEFAULTS);
+  setSeedDisplay();
+  const ids = ['blood','pull','turb','tent','eye','visc','fade'];
+  const keys= ['blood','pull','turb','tent','eye','visc','fade'];
+  ids.forEach((id, i) => {
+    let el = document.getElementById('s-' + id);
+    el.value = P[keys[i]];
+    let pct = ((P[keys[i]] - +el.min) / (+el.max - +el.min) * 100).toFixed(1);
+    el.style.setProperty('--pct', pct + '%');
+    document.getElementById('v-' + id).textContent = P[keys[i]];
+  });
+  doReinit();
+}
+
+function doPNG() {
+  let cnv = document.querySelector('#cc canvas');
+  if (!cnv) return;
+  let a = document.createElement('a');
+  a.download = `paleblood-vigil-seed-${P.seed}.png`;
+  a.href = cnv.toDataURL('image/png');
+  a.click();
+}
+
+// Init slider gradients
+document.querySelectorAll('input[type=range]').forEach(el => {
+  let pct = ((+el.value - +el.min) / (+el.max - +el.min) * 100).toFixed(1);
+  el.style.setProperty('--pct', pct + '%');
+});
+</script>
+</body>
+</html>
