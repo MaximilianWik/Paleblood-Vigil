@@ -1,8 +1,5 @@
 # Paleblood Vigil
 
-## Live: https://paleblood-vigil.vercel.app/
-
-
 Generative art built with [p5.js](https://p5js.org/). Open `index.html` in any browser — no build step, no server, no dependencies beyond a CDN script tag.
 
 ---
@@ -20,7 +17,7 @@ Particles with velocity vectors are released across the canvas and subjected to:
 
 Trails accumulate on a persistent off-screen `p5.Graphics` buffer (`trailPg`). Each frame the buffer is dimmed by a semi-transparent fill (the *Trail Fade* parameter), so old paths decay gradually. This produces heat-map-style accumulation at attractor convergence zones.
 
-### Geometric Substrate (sigil)
+### Geometric Substrate
 
 Three concentric nested polygons (hexagon, nonagon, dodecagon) counter-rotate at slightly different speeds around the canvas centre. Spokes radiate from centre to each vertex. Alpha is set low (10–22%) so the geometry reads as structural substrate beneath the particle layer rather than foreground decoration.
 
@@ -70,7 +67,7 @@ This separation — thinking before coding — distinguishes generative art from
 
 All parameters are live — changes take effect immediately without reinitialisation.
 
-**Randomize Params** randomises all five simultaneously, then reinitialises. Good for discovering unexpected configurations.
+**Randomize Params** randomises all five simultaneously, then reinitialises.
 
 ---
 
@@ -81,8 +78,6 @@ All parameters are live — changes take effect immediately without reinitialisa
 - **Prev / Next** — increment/decrement seed by 1
 - **Random Seed** — jump to a random seed in `[1, 99999]`
 - **Jump to seed** — enter any integer directly
-
-Each seed produces a unique attractor configuration and particle distribution.
 
 ---
 
